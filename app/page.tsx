@@ -29,7 +29,7 @@ export default async function Home() {
     <main className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-extrabold text-gray-900 mb-10 text-center tracking-tight">
-          AI Intelligence Feed
+          MY AI Intelligence Feed
         </h1>
 
         <div className="space-y-10">
