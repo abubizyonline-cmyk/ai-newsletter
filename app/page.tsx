@@ -1,65 +1,109 @@
-import Image from "next/image";
+import { createClient } from '@supabase/supabase-js';
 
-export default function Home() {
+// Force Next.js to always fetch fresh data
+export const dynamic = 'force-dynamic';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+export default async function Home() {
+  const { data: newsletters } = await supabase
+    .from('newsletters')
+    .select('*')
+    .order('created_at', { ascending: false });
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-extrabold text-gray-900 mb-10 text-center tracking-tight">
+          AI Intelligence Feed
+        </h1>
+
+        <div className="space-y-10">
+          {newsletters?.map((newsletter) => {
+            // Data Cleaning: Parse takeaways if they come in as a string
+            let cleanTakeaways = [];
+            try {
+              cleanTakeaways = typeof newsletter.takeaways === 'string' 
+                ? JSON.parse(newsletter.takeaways) 
+                : newsletter.takeaways;
+            } catch (e) {
+              cleanTakeaways = ["Could not load takeaways"];
+            }
+
+            return (
+              <article 
+                key={newsletter.id} 
+                className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100"
+              >
+                {/* Header Section */}
+                <div className="bg-slate-900 p-8">
+                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 leading-tight">
+                    {newsletter.video_title}
+                  </h2>
+                  <div className="flex items-center text-slate-400 text-sm">
+                    <span className="bg-slate-800 px-3 py-1 rounded-full">
+                      ID: {newsletter.video_id}
+                    </span>
+                    <span className="mx-3">•</span>
+                    <span>{new Date(newsletter.created_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+
+                {/* The "Hook" Box */}
+                <div className="p-8">
+                  <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded-r-lg mb-8">
+                    <h3 className="text-green-800 font-bold uppercase tracking-wide text-xs mb-2">
+                      The Big Idea
+                    </h3>
+                    <p className="text-lg text-green-900 font-medium italic">
+                      "{newsletter.hook}"
+                    </p>
+                  </div>
+
+                  {/* Key Takeaways List */}
+                  <div className="mb-10">
+                    <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                      <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3 text-sm">⚡</span>
+                      Key Takeaways
+                    </h3>
+                    <ul className="space-y-3">
+                      {Array.isArray(cleanTakeaways) && cleanTakeaways.map((point: string, i: number) => (
+                        <li key={i} className="flex items-start">
+                          <span className="text-blue-500 mr-2 mt-1">•</span>
+                          <span className="text-gray-700 leading-relaxed">{point}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Deep Dive (The Full Article) */}
+                  <div className="prose prose-slate max-w-none">
+                     <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                      <span className="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3 text-sm">📖</span>
+                      Deep Dive
+                    </h3>
+                    <div className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+                      {newsletter.deep_dive}
+                    </div>
+                  </div>
+                  
+                  {/* Actionable Advice */}
+                  {newsletter.actionable_advice && (
+                     <div className="mt-8 bg-purple-50 p-6 rounded-xl border border-purple-100">
+                        <h4 className="text-purple-900 font-bold mb-2">🚀 Action Step</h4>
+                        <p className="text-purple-800">{newsletter.actionable_advice}</p>
+                     </div>
+                  )}
+
+                </div>
+              </article>
+            );
+          })}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
