@@ -3,12 +3,23 @@ import { createClient } from '@supabase/supabase-js';
 // Force Next.js to always fetch fresh data
 export const dynamic = 'force-dynamic';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 export default async function Home() {
+  // 1. Check for keys safely INSIDE the function
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return (
+      <div className="p-10 text-red-500">
+        <h1 className="text-2xl font-bold">Configuration Error</h1>
+        <p>Supabase keys are missing in Vercel Environment Variables.</p>
+      </div>
+    );
+  }
+
+  // 2. Connect only when we have keys
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
   const { data: newsletters } = await supabase
     .from('newsletters')
     .select('*')
@@ -23,7 +34,6 @@ export default async function Home() {
 
         <div className="space-y-10">
           {newsletters?.map((newsletter) => {
-            // Data Cleaning: Parse takeaways if they come in as a string
             let cleanTakeaways = [];
             try {
               cleanTakeaways = typeof newsletter.takeaways === 'string' 
@@ -38,7 +48,6 @@ export default async function Home() {
                 key={newsletter.id} 
                 className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100"
               >
-                {/* Header Section */}
                 <div className="bg-slate-900 p-8">
                   <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 leading-tight">
                     {newsletter.video_title}
@@ -52,7 +61,6 @@ export default async function Home() {
                   </div>
                 </div>
 
-                {/* The "Hook" Box */}
                 <div className="p-8">
                   <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded-r-lg mb-8">
                     <h3 className="text-green-800 font-bold uppercase tracking-wide text-xs mb-2">
@@ -63,7 +71,6 @@ export default async function Home() {
                     </p>
                   </div>
 
-                  {/* Key Takeaways List */}
                   <div className="mb-10">
                     <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                       <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3 text-sm">⚡</span>
@@ -79,7 +86,6 @@ export default async function Home() {
                     </ul>
                   </div>
 
-                  {/* Deep Dive (The Full Article) */}
                   <div className="prose prose-slate max-w-none">
                      <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                       <span className="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3 text-sm">📖</span>
@@ -90,7 +96,6 @@ export default async function Home() {
                     </div>
                   </div>
                   
-                  {/* Actionable Advice */}
                   {newsletter.actionable_advice && (
                      <div className="mt-8 bg-purple-50 p-6 rounded-xl border border-purple-100">
                         <h4 className="text-purple-900 font-bold mb-2">🚀 Action Step</h4>
