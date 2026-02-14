@@ -4,13 +4,20 @@ import { createClient } from '@supabase/supabase-js';
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  // ---------------------------------------------------------
-  // HARDCODED CONNECTION (Guaranteed to work)
-  // ---------------------------------------------------------
-  const supabaseUrl = "https://cddigsplxpzbubsqtnky.supabase.co"; 
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZGlnc3BseHB6YnVic3F0bmt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3NzI5ODMsImV4cCI6MjA4NjM0ODk4M30.sv3-MpA9h_Vp8vBfVUV4kWpcpA8E3c2VkDkksU0rPaE";
-  // ---------------------------------------------------------
+  // 1. Check for keys safely INSIDE the function
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+  if (!supabaseUrl || !supabaseKey) {
+    return (
+      <div className="p-10 text-red-500">
+        <h1 className="text-2xl font-bold">Configuration Error</h1>
+        <p>Supabase keys are missing in Vercel Environment Variables.</p>
+      </div>
+    );
+  }
+
+  // 2. Connect only when we have keys
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   const { data: newsletters } = await supabase
@@ -22,7 +29,7 @@ export default async function Home() {
     <main className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-extrabold text-gray-900 mb-10 text-center tracking-tight">
-          AI Intelligence Feed
+          MY AI Intelligence Feed
         </h1>
 
         <div className="space-y-10">
